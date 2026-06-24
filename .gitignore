@@ -1,0 +1,7 @@
+# 台本バンドルは novela 側の成果物。ここでは追跡しない（シンボリックリンク or コピー）
+bundle
+bundle/
+*.local
+.DS_Store
+dist
+dist/

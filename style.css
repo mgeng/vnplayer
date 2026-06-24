@@ -1,0 +1,252 @@
+:root {
+  --ink: #f4ece0;
+  --box-bg: rgba(18, 14, 20, 0.82);
+  --accent: #d8466b;
+  --shadow: 0 2px 12px rgba(0,0,0,0.7);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  font-family: "Hiragino Mincho ProN", "Noto Serif JP", "Yu Mincho", serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+#stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: 1280px;
+  max-height: 100vh;
+  margin: 0 auto;
+  background: #111;
+  overflow: hidden;
+}
+
+/* 背景：画像が無ければ単色グラデのプレースホルダ */
+#bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, #2a2230, #14101a);
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.4s ease;
+}
+
+/* 立ち絵 */
+#sprites {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-end; justify-content: center;
+  pointer-events: none;
+}
+.sprite {
+  height: 88%;
+  max-width: 46%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(0,0,0,0.6));
+  transition: opacity 0.3s ease;
+}
+/* 立ち絵プレースホルダ（画像欠損時のシルエット） */
+.sprite-placeholder {
+  width: 30%;
+  height: 80%;
+  align-self: flex-end;
+  background: radial-gradient(ellipse at 50% 30%, #4a3b52 0%, #2a2030 70%);
+  border-radius: 48% 48% 12% 12% / 60% 60% 12% 12%;
+  opacity: 0.55;
+}
+
+/* イベントCG（1枚絵）：背景・立ち絵を覆う全画面イラスト。
+   z-index は背景/立ち絵（auto）より上、テキスト窓・選択肢・転換カード・HUDより下。 */
+#cg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 2;
+  pointer-events: none; /* 視覚レイヤーのみ。クリック送りを妨げない */
+  /* opacity はフェード、visibility はフェード完了後に遅延して切る（display:none だとフェードできずパッと出て固まって見えるため） */
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+#cg.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s ease, visibility 0s;
+}
+/* CG表示中は顔窓を隠す（顔窓は z-index が CG より上なので必ず隠す）。
+   立ち絵は CG（z-index 2）より下にあるので、フェード中だけ裏で重なり、
+   CG が不透明になれば自然に覆われる＝ハードカットでなくディゾルブになる。
+   よって立ち絵は display:none にせず残す。 */
+#stage.cg-active #face-window { display: none !important; }
+
+/* テキストウィンドウ：横書き左→右 */
+#textbox {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30%;
+  background: var(--box-bg);
+  backdrop-filter: blur(2px);
+  border-top: 2px solid rgba(216,70,107,0.5);
+  padding: 30px 48px 22px;
+  cursor: pointer;
+}
+#speaker {
+  position: absolute;
+  top: -16px; left: 36px;
+  background: var(--accent);
+  color: #fff;
+  padding: 4px 18px;
+  border-radius: 4px;
+  font-size: 18px;
+  box-shadow: var(--shadow);
+  letter-spacing: 1px;
+}
+#speaker:empty { display: none; }
+#text {
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+  font-size: 23px;
+  line-height: 1.75;
+  letter-spacing: 1px;
+  text-shadow: var(--shadow);
+  overflow: hidden;
+}
+#advance-hint {
+  position: absolute;
+  right: 22px; bottom: 12px;
+  color: var(--accent);
+  animation: bob 1.1s infinite;
+}
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+
+/* 画面（タイトル・選択肢） */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5;
+}
+.hidden { display: none !important; }
+
+#title { flex-direction: column; gap: 18px; background: rgba(0,0,0,0.55); }
+#title-cover {
+  max-height: 52%;
+  border-radius: 6px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.8);
+}
+#title-text { text-align: center; color: var(--ink); }
+#title-name { font-size: 34px; letter-spacing: 4px; text-shadow: var(--shadow); }
+#title-sub { font-size: 16px; opacity: 0.85; margin-top: 6px; }
+#title-author { font-size: 15px; opacity: 0.7; margin-top: 12px; }
+
+button {
+  margin-top: 18px;
+  font-family: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  padding: 10px 34px;
+  border-radius: 30px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  box-shadow: var(--shadow);
+}
+button:hover { filter: brightness(1.1); }
+
+#choices {
+  flex-direction: column; gap: 14px;
+  background: rgba(0,0,0,0.45);
+}
+
+/* エピソード転換カード */
+#titlecard {
+  background: #000;
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+#titlecard.show { opacity: 1; }
+#titlecard-text {
+  color: var(--ink);
+  font-size: 30px;
+  letter-spacing: 3px;
+  text-align: center;
+  padding: 0 32px;
+  line-height: 1.6;
+  border-top: 1px solid rgba(216,70,107,0.6);
+  border-bottom: 1px solid rgba(216,70,107,0.6);
+  padding-top: 18px; padding-bottom: 18px;
+  text-shadow: var(--shadow);
+}
+.choice-btn {
+  min-width: 320px;
+  background: rgba(30,22,34,0.92);
+  border: 1px solid rgba(216,70,107,0.6);
+}
+
+/* 顔ウィンドウ（左下・本編中のみ） */
+#face-window {
+  position: absolute;
+  left: 16px;
+  bottom: calc(30% + 12px); /* テキストボックス高さ30%の上に配置 */
+  width: 22vw;
+  max-width: 200px;
+  min-width: 100px;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  border: 2px solid rgba(216, 70, 107, 0.7);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.75), 0 0 8px rgba(216,70,107,0.3);
+  background: rgba(18, 14, 20, 0.75);
+  overflow: hidden;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+}
+#face-window.hidden { display: none !important; }
+
+#face-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+#face-img[src=""] { display: none; }
+
+/* 顔画像プレースホルダ（画像欠損時のシルエット） */
+#face-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: radial-gradient(ellipse at 50% 28%, #4a3b52 0%, #1e1625 65%);
+  border-radius: 8px;
+}
+#face-placeholder.active { display: block; }
+
+/* HUD */
+#hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 16px;
+  font-size: 13px; color: rgba(244,236,224,0.6);
+  pointer-events: none; z-index: 4;
+}
+
+/* ミュートボタン */
+#mute-btn {
+  margin-top: 0;
+  padding: 2px 8px;
+  font-size: 16px;
+  background: rgba(18,14,20,0.6);
+  border: 1px solid rgba(244,236,224,0.25);
+  border-radius: 6px;
+  color: rgba(244,236,224,0.8);
+  letter-spacing: 0;
+  pointer-events: auto;
+  line-height: 1;
+}
+#mute-btn:hover { filter: brightness(1.3); }

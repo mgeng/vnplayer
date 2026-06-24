@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>novela VN Player</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <!-- 背景 -->
+    <div id="bg"></div>
+    <!-- 立ち絵 -->
+    <div id="sprites"></div>
+
+    <!-- イベントCG（1枚絵）：背景・立ち絵を覆う全画面イラスト。cg 指定時のみ表示 -->
+    <img id="cg" alt="">
+
+    <!-- タイトル画面 -->
+    <div id="title" class="screen">
+      <img id="title-cover" alt="">
+      <div id="title-text">
+        <h1 id="title-name"></h1>
+        <p id="title-sub"></p>
+        <p id="title-author"></p>
+        <button id="start-btn">はじめる</button>
+      </div>
+    </div>
+
+    <!-- 選択肢 -->
+    <div id="choices" class="screen hidden"></div>
+
+    <!-- エピソード転換カード（話が変わるとき中央に表示） -->
+    <div id="titlecard" class="screen hidden">
+      <div id="titlecard-text"></div>
+    </div>
+
+    <!-- 顔ウィンドウ（左下、本編中のみ表示） -->
+    <div id="face-window" class="hidden">
+      <img id="face-img" alt="">
+      <div id="face-placeholder"></div>
+    </div>
+
+    <!-- テキストウィンドウ（縦書き） -->
+    <div id="textbox" class="hidden">
+      <div id="speaker"></div>
+      <div id="text"></div>
+      <div id="advance-hint">▼</div>
+    </div>
+
+    <!-- 上部HUD -->
+    <div id="hud">
+      <span id="hud-title"></span>
+      <span id="hud-scene"></span>
+      <button id="mute-btn" title="ミュート切替">🔊</button>
+    </div>
+  </div>
+
+  <script src="engine.js"></script>
+</body>
+</html>

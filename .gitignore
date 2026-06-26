@@ -1,7 +1,22 @@
-# 台本バンドルは novela 側の成果物。ここでは追跡しない（シンボリックリンク or コピー）
+# 台本バンドルの出力先（tools/game_export.py / game_sdxl.py が書き出すスクラッチ）
+work
+work/
+# 再生用に置くバンドル（シンボリックリンク or コピー）
 bundle
 bundle/
 *.local
 .DS_Store
 dist
 dist/
+
+# 生成ゲーム画像はGitHubに混入させない（アダルトCG/立ち絵/顔/カバー）。
+# 版権OKのBGM(assets/bgm/*.mp3)だけは追跡する。
+assets/**/*.png
+assets/**/*.jpg
+assets/**/*.jpeg
+assets/**/*.webp
+cg_*.png
+char_*.png
+face_*.png
+bg_*.png
+cover.jpg

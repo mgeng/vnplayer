@@ -49,7 +49,7 @@ FANZA 同人 DL 販売向け。配布はサーバレス（`file://`）：`build.
 
 - キャラ一貫性 = 固定アンカー（例 `AYUMI`、泣きぼくろ等の識別特徴）＋固定 seed。outfit を分離し CG は nude 可。
 - **CG は solo-POV**（語り手は一人称・画面外）＝2キャラ drift を避ける。立ち絵/顔は白背景生成→keying で透過、CG は全画面。
-- Grok と違いモデレーション制約なし。1枚 ~9–10s。
+- Grok と違いモデレーション制約なし。モデル常駐化済みで 1枚 ~7.3s（枚数が多いほど1枚あたり短縮）。
 - API は `http://localhost:8188`（SSH ポートフォワード経由）。`MANGEN_API` で差し替え可。
   2ステップ方式 `POST /generate` → `GET /img/<filename>`（仕様書の `/generate/raw` は現状404）。
 - **既知サーババグ**：result cache が `(seed, size)` キーで prompt を無視 → 同seed/同size の表情差分が1枚に潰れる。
@@ -65,7 +65,8 @@ mangen SDXL API は **ローカルではなく GCP GPU VM `mangen-gpu`**（proje
 - API（:8188）到達は **SSH ポートフォワードのみ**（`gcloud compute ssh … -- -L 8188:localhost:8188`）。
   `vm-up` 単体ではトンネルは張られない → 自分でバックグラウンドトンネルを起動する。
 - **課金最小ワークフロー**：prep（エンジン/CG層コード・プロンプト・`script.json` 編集・keying ロジック）は
-  **VM ダウン中に全部済ませる** → `vm-up` ＋トンネル → 全生成を **1バッチ**で（GPU は直列・~9–10s/枚、並列呼び出しでも速くならない）
+  **VM ダウン中に全部済ませる** → `vm-up` ＋トンネル → 全生成を **1バッチ**で（GPU は直列・~7.3s/枚、並列呼び出しでも速くならない。モデル常駐化済みなので
+  バッチが大きいほどロード固定費が薄まり1枚あたり下がる＝まとめるほど得）
   → 終わったら **即 `vm-down`**。統合・検証・思考の間は VM を上げない。不安なら `vm-status` で確認して落とす。
 - 透過 keying は **vm-down 後にローカルで** `sdxl.py key`（`gen` は keying しない）。
 

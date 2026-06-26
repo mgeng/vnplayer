@@ -122,6 +122,57 @@ CGS = {
         "solo, 1girl, white sundress, no panties, sitting, car interior, "
         "passenger seat, daytime, blush, embarrassed, aroused, thighs together, "
         "black leather choker, pov, sunlight through trees", 1013),
+
+    # ── A. 新規CG（本番の山場をカバー / 台本準拠）──────────
+    "cg_anal_creampie": (  # ep7(scene7 L84): 四つん這いアナル挿入・奥突き・中出し（cunnilingus の後の本番）
+        "solo, 1girl, nude, on all fours, doggystyle, anal sex, anal object insertion, "
+        "bedroom, on bed, night, deep penetration, ass focus, looking back, "
+        "ecstasy, ahegao, heavy blush, sweat, tears of pleasure, cum, creampie, "
+        "large breasts, pov, dim warm light, cinematic", 1016),
+    "cg_collar_anal": (  # ep8(scene8 L89): 首輪をつけたまま四つん這いアナルSEX
+        "solo, 1girl, nude, black leather collar, leash, on all fours, doggystyle, "
+        "anal sex, anal object insertion, bedroom, on bed, night, deep penetration, "
+        "looking back, submissive, ecstasy, heavy blush, sweat, large breasts, "
+        "pov, dim warm light, cinematic", 1017),
+    "cg_bondage_squirt": (  # ep9(scene9 L20): 完全拘束・M字開脚で大型バイブ責め、潮吹き連続オルガ
+        "solo, 1girl, nude, bdsm, black leather harness, bondage, blindfold, "
+        "ball gag, drooling, restrained, spread legs, m legs, large vibrator, "
+        "vaginal object insertion, squirting, on bed, bedroom, night, ecstasy, "
+        "heavy blush, sweat, large breasts, pov, dim light, cinematic", 1018),
+    "cg_self_fist": (  # 最終話(scene11 L21): ラブホでハーネスのみ、自らの拳でセルフフィスト絶頂
+        "solo, 1girl, nude, black leather harness, spread legs, m legs, self fisting, "
+        "vaginal fisting, own hand, squirting, on bed, love hotel, ecstasy, ahegao, "
+        "orgasm, heavy blush, sweat, tears, large breasts, looking at viewer, "
+        "pov, dim warm light, cinematic", 1019),
+    "cg_car_cowgirl": (  # ep10(scene10 L58): 露出帰りの車内、助手席で騎乗位・中出し
+        "solo, 1girl, white sundress, dress lift, girl on top, cowgirl position, "
+        "straddling, car interior, passenger seat, evening, vaginal, sex, ecstasy, "
+        "heavy blush, sweat, large breasts, looking at viewer, cum, creampie, "
+        "black leather choker, pov, sunlight through window", 1020),
+
+    # ── B. 既存CGの進行段階差分／別ビート（低コスト水増し / 別seed必須）──
+    "cg_cunnilingus_climax": (  # ep7(scene7 L29): cunnilingus の連続絶頂差分（潮吹き・アヘ顔）
+        "solo, 1girl, nude, on bed, bedroom, spread legs, knees up, pussy focus, "
+        "from above, ahegao, ecstasy, squirting, orgasm, tears, sweat, "
+        "heavy blush, large breasts, rolling eyes, pov, dim warm light", 1021),
+    "cg_cowgirl_creampie": (  # ep3(scene3 L10): cowgirl_sex の中出し差分
+        "solo, 1girl, nude, girl on top, cowgirl position, straddling, on bed, "
+        "bedroom, night, ahegao, ecstasy, orgasm, heavy blush, sweat, large breasts, "
+        "cum, creampie, rolling eyes, tongue out, pov, dim warm light, cinematic", 1022),
+    "cg_park_exposure": (  # ep10(scene10 L49): 公園のベンチで露出、ローター責め・潮吹き
+        "solo, 1girl, white sundress, dress lift, breasts out, sitting on park bench, "
+        "outdoors, daytime, spread legs, m legs, vibrator on clitoris, public exposure, "
+        "squirting, blush, embarrassed, aroused, ecstasy, sweat, black leather choker, "
+        "pov, dappled sunlight, trees", 1023),
+    "cg_morning_apron_spread": (  # ep5(scene5 L20): morning_apron の差分、自らお尻を広げて窄まりを見せつける
+        "solo, 1girl, naked apron, bottomless, no panties, kitchen, morning, bent over, "
+        "spreading own ass, ass focus, presenting, anus, looking back, blush, "
+        "embarrassed, bare thighs, sweat, pov, bright morning light", 1024),
+    "cg_collar_slave_orgasm": (  # ep8(scene8 L60): collar_slave の玩具全身絶頂・アヘ顔差分
+        "solo, 1girl, nude, black leather collar, leash, on all fours, living room, "
+        "sex toys, dildo, vibrator, multiple insertions, ahegao, ecstasy, orgasm, "
+        "heavy blush, sweat, drooling, rolling eyes, large breasts, "
+        "looking up at viewer, pov, dim lighting", 1025),
 }
 
 

@@ -93,6 +93,10 @@ html, body {
   border-top: 2px solid rgba(216,70,107,0.5);
   padding: 30px 48px 22px;
   cursor: pointer;
+  /* CG（z-index:2）より上に重ねる。未指定だと全画面CGに覆われ、
+     テキストと送りヒントが隠れて「一枚絵が出たまま進めない」ように見える（#2）。
+     CGより上・選択肢/HUD（z-index:5+）より下に置く。 */
+  z-index: 3;
 }
 #speaker {
   position: absolute;

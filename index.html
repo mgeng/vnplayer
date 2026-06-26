@@ -24,11 +24,21 @@
         <p id="title-sub"></p>
         <p id="title-author"></p>
         <button id="start-btn">はじめる</button>
+        <button id="title-episodes-btn">話を選ぶ</button>
       </div>
     </div>
 
     <!-- 選択肢 -->
     <div id="choices" class="screen hidden"></div>
+
+    <!-- 話選択メニュー（タイトル／ゲーム内 共用）。話一覧は engine.js が動的生成 -->
+    <div id="episode-menu" class="screen hidden">
+      <div id="episode-panel">
+        <div id="episode-menu-title">話を選ぶ</div>
+        <div id="episode-list"></div>
+        <button id="episode-close-btn">閉じる</button>
+      </div>
+    </div>
 
     <!-- エピソード転換カード（話が変わるとき中央に表示） -->
     <div id="titlecard" class="screen hidden">
@@ -52,7 +62,10 @@
     <div id="hud">
       <span id="hud-title"></span>
       <span id="hud-scene"></span>
-      <button id="mute-btn" title="ミュート切替">🔊</button>
+      <span id="hud-controls">
+        <button id="hud-episodes-btn" title="話を選ぶ">☰ 話</button>
+        <button id="mute-btn" title="ミュート切替">🔊</button>
+      </span>
     </div>
   </div>
 

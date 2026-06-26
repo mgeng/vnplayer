@@ -35,6 +35,7 @@
     hudTitle: el("hud-title"), hudScene: el("hud-scene"),
     titlecard: el("titlecard"), titlecardText: el("titlecard-text"),
     faceWindow: el("face-window"), faceImg: el("face-img"), facePh: el("face-placeholder"),
+    episodeMenu: el("episode-menu"), episodeList: el("episode-list"),
   };
 
   const state = {
@@ -52,6 +53,11 @@
     cgHoldLine: null,   // 保留中のCG行（クリック後にこの行の本文を表示する）
     history: [],        // 表示済みビートのスナップショット列（上キーで1つ戻る）
   };
+
+  // 描画世代トークン（#8）。状態を進める起点（renderScene / nextLine / restoreSnapshot）で
+  // ++renderGen し、各画像ロード（async）にその世代を渡す。tryImage 解決後に世代が変わって
+  // いたら DOM 反映を捨てる＝高速送りで古いロードが新しい絵を上書き/取りこぼすのを防ぐ。
+  let renderGen = 0;
 
   // BGM: 2枚の<audio>タグでクロスフェード実装
   const bgmTracks = [
@@ -135,20 +141,22 @@
     });
   }
 
-  async function setBackground(bgId) {
+  async function setBackground(bgId, gen) {
     if (bgId === state.currentBg) return;
     state.currentBg = bgId;
     if (!bgId) { dom.bg.style.backgroundImage = ""; return; }
     const url = await tryImage(`${ASSETS}/bg_${bgId}.png`);
+    if (gen !== undefined && gen !== renderGen) return; // 古い世代のロード→反映しない
     dom.bg.style.backgroundImage = url ? `url("${url}")` : "";
   }
 
   // 顔ウィンドウ更新。spriteId が null/未指定のときは現在の表示を維持する（立ち絵と同思想）。
   // spriteId が文字列のとき assets/face_<spriteId>.png を試し、欠損時はプレースホルダ表示。
-  async function updateFaceWindow(spriteId) {
+  async function updateFaceWindow(spriteId, gen) {
     if (!spriteId) return; // null/未指定 → 維持
     state.currentFace = spriteId;
     const url = await tryImage(`${ASSETS}/face_${spriteId}.png`);
+    if (gen !== undefined && gen !== renderGen) return; // 古い世代→反映しない
     if (url) {
       dom.faceImg.src = url;
       dom.facePh.classList.remove("active");
@@ -160,11 +168,12 @@
     }
   }
 
-  async function showSprite(spriteId) {
+  async function showSprite(spriteId, gen) {
     state.currentSprite = spriteId || null;
     dom.sprites.innerHTML = "";
     if (!spriteId) return;
     const url = await tryImage(`${ASSETS}/char_${spriteId}.png`);
+    if (gen !== undefined && gen !== renderGen) return; // 古い世代→反映しない
     if (url) {
       const img = document.createElement("img");
       img.className = "sprite";
@@ -182,7 +191,7 @@
   //   cgId が非空文字列   → assets/cg_<id>.png を全画面オーバーレイ表示（立ち絵・顔窓は隠れる）
   //   cgId が ""          → CGを消し、背景＋立ち絵の表示へ戻す
   // 画像欠損時は tryImage が null を返すので、壊れた画像を出さずCGを張らない（背景/立ち絵を維持）。
-  async function showCg(cgId) {
+  async function showCg(cgId, gen) {
     if (cgId == null) return; // null/未指定 → 維持
     if (cgId === "") {
       // CGクリア：active を外すと opacity が 0 へフェードアウトする。
@@ -195,6 +204,7 @@
     }
     if (cgId === state.currentCg) return; // 同じCGなら張り直さない
     const url = await tryImage(`${ASSETS}/cg_${cgId}.png`);
+    if (gen !== undefined && gen !== renderGen) return; // 古い世代→反映しない
     if (url) {
       state.currentCg = cgId;
       dom.cg.src = url;
@@ -251,21 +261,23 @@
 
   async function renderScene() {
     const sc = currentScene();
+    const gen = ++renderGen; // 新しい描画世代。進行中の古いロードを無効化する
     dom.hudScene.textContent = sc.heading || sc.id;
-    await setBackground(sc.bg);
+    await setBackground(sc.bg, gen);
     // scene.bgm が指定されている場合のみ切り替え。null/未指定なら現在の曲を維持。
     if (sc.bgm) playBgm(sc.bgm);
     // scene.chapter があれば転換カードを挟む（背景・BGMはカードの裏で先に切替済み）
     if (sc.chapter) await showTitleCard(sc.chapter);
-    await showSprite(null);
+    await showSprite(null, gen);
     // シーン遷移ごとにイベントCGは自動クリア（各シーンはCGなしで開始）
     state.cgHold = false; state.cgHoldLine = null;
-    await showCg("");
+    await showCg("", gen);
     nextLine();
   }
 
   function nextLine() {
     const sc = currentScene();
+    const gen = ++renderGen; // 1ビート＝1世代。古いロードを無効化（#8）
 
     // 全画面CGを「画だけ」表示して止めている状態：クリックされたらCGを消し、
     // 保留していた行の本文を通常のテキスト窓で表示する（画→クリック→本文）。
@@ -273,8 +285,8 @@
       const held = state.cgHoldLine;
       state.cgHold = false;
       state.cgHoldLine = null;
-      showCg(""); // CGを消す → cg-active が外れ textbox/立ち絵が戻る
-      renderTextLine(held);
+      showCg("", gen); // CGを消す → cg-active が外れ textbox/立ち絵が戻る
+      renderTextLine(held, gen);
       return;
     }
 
@@ -298,30 +310,30 @@
     // 非空CGを持つ行：まず全画面で「画だけ」を出し、シナリオは止める。
     // 本文（この行の text）はクリックでCGを消した後に表示する。
     if (Object.prototype.hasOwnProperty.call(line, "cg") && line.cg) {
-      showCg(line.cg); // cg-active CSS で textbox/顔窓が隠れる＝画だけ
+      showCg(line.cg, gen); // cg-active CSS で textbox/顔窓が隠れる＝画だけ
       state.cgHold = true;
       state.cgHoldLine = line;
       pushHistory("cghold", line);
       return;
     }
 
-    renderTextLine(line);
+    renderTextLine(line, gen);
   }
 
   // dialogue / narration 行を通常のテキスト窓で表示する。
-  function renderTextLine(line) {
+  function renderTextLine(line, gen) {
     const isDialogue = line.type === "dialogue" || line.speaker;
     dom.speaker.textContent = isDialogue && line.speaker && line.speaker !== "?" ? line.speaker : "";
     // 立ち絵は sprite が明示されたときだけ差し替える。
     // null/未指定なら維持（一人称の語り手のセリフや地の文でヒロインを消さない）。
-    if (line.sprite) showSprite(line.sprite);
+    if (line.sprite) showSprite(line.sprite, gen);
     // 顔ウィンドウ：sprite が明示されたときだけ更新（null/未指定なら現在の表情を維持）。
-    updateFaceWindow(line.sprite || null);
+    updateFaceWindow(line.sprite || null, gen);
     // イベントCG：cg="" のクリアのみここで反映する。
     // 非空CGは nextLine 側の「画だけ」ビート専用。ここで再表示してはいけない
     // （held 行を本文表示する際に再 showCg すると cg-active がテキスト窓を隠し直し、
     //  本文が一瞬見えてから画に戻る＝固まる・ちらつく不安定の主因）。
-    if (Object.prototype.hasOwnProperty.call(line, "cg") && line.cg === "") showCg("");
+    if (Object.prototype.hasOwnProperty.call(line, "cg") && line.cg === "") showCg("", gen);
     dom.text.textContent = line.text || "";
     pushHistory("text", line);
   }
@@ -367,18 +379,52 @@
     state.history = [];
   }
 
-  function startGame() {
+  // 本編プレイ状態へ入る共通処理（はじめる／話選択ジャンプで共用）。
+  // 進行状態をリセットし、指定 scene id から開始する。
+  function enterPlay(sceneId) {
     dom.title.classList.add("hidden");
+    closeEpisodeMenu();
+    dom.choices.classList.add("hidden");
     dom.textbox.classList.remove("hidden");
     // 本編開始時に顔窓を表示（最初はプレースホルダ状態）
     dom.facePh.classList.add("active");
     dom.faceWindow.classList.remove("hidden");
-    // 「はじめる」クリックがユーザージェスチャになるので BGM 解禁フラグを立てる
-    // 最初のシーンの bgm は renderScene → playBgm で鳴り始める
+    // クリック/タップがユーザージェスチャになるので BGM 解禁フラグを立てる
     state.bgmReady = true;
+    // ジャンプ前のホールド/カード状態を必ず解除（途中ジャンプ対策）
+    state.cardActive = false;
+    state.cgHold = false; state.cgHoldLine = null;
     state.history = [];
+    gotoSceneId(sceneId);
+  }
+
+  function startGame() {
     const startId = state.script.start || (state.script.scenes[0] && state.script.scenes[0].id);
-    gotoSceneId(startId);
+    enterPlay(startId);
+  }
+
+  // chapter 見出しを持つ scene を話一覧として返す（{id, label}）。
+  function episodeList() {
+    return state.script.scenes
+      .filter((s) => s.chapter)
+      .map((s) => ({ id: s.id, label: s.chapter }));
+  }
+
+  function openEpisodeMenu() {
+    if (state.cardActive) return; // 転換カード表示中は開かない
+    dom.episodeList.innerHTML = "";
+    episodeList().forEach((ep) => {
+      const b = document.createElement("button");
+      b.className = "episode-btn";
+      b.textContent = ep.label;
+      b.onclick = (e) => { e.stopPropagation(); enterPlay(ep.id); };
+      dom.episodeList.appendChild(b);
+    });
+    dom.episodeMenu.classList.remove("hidden");
+  }
+
+  function closeEpisodeMenu() {
+    dom.episodeMenu.classList.add("hidden");
   }
 
   function buildCastIndex() {
@@ -391,6 +437,7 @@
   function advance() {
     if (state.cardActive) return;                          // 転換カード表示中は無視
     if (!dom.choices.classList.contains("hidden")) return; // 選択肢表示中は無視
+    if (!dom.episodeMenu.classList.contains("hidden")) return; // 話選択中は無視
     if (dom.title.classList.contains("hidden")) nextLine();
   }
 
@@ -411,7 +458,7 @@
   }
 
   // 顔ウィンドウを指定IDに直接合わせる（復元用。null ならクリア）。
-  async function applyFaceDirect(faceId) {
+  async function applyFaceDirect(faceId, gen) {
     state.currentFace = faceId;
     if (!faceId) {
       dom.faceImg.src = ""; dom.faceImg.style.display = "none";
@@ -419,6 +466,7 @@
       return;
     }
     const url = await tryImage(`${ASSETS}/face_${faceId}.png`);
+    if (gen !== undefined && gen !== renderGen) return; // 古い世代→反映しない
     if (url) {
       dom.faceImg.src = url; dom.facePh.classList.remove("active");
       dom.faceImg.style.display = "block";
@@ -430,22 +478,23 @@
 
   // スナップショットの見た目と位置を復元する（history には積み直さない）。
   function restoreSnapshot(snap) {
+    const gen = ++renderGen; // 戻る操作も1世代。進行中の古いロードを無効化（#8）
     dom.choices.classList.add("hidden");
     state.sceneIndex = snap.sceneIndex;
     state.lineIndex = snap.lineIndex;
     state.cgHold = snap.cgHold;
     state.cgHoldLine = snap.cgHoldLine;
-    setBackground(snap.bg);
-    showSprite(snap.sprite);
-    applyFaceDirect(snap.face);
+    setBackground(snap.bg, gen);
+    showSprite(snap.sprite, gen);
+    applyFaceDirect(snap.face, gen);
     if (snap.bgm) playBgm(snap.bgm);
 
     if (snap.kind === "cghold") {
       // 「画だけ」ビート：CGを張り直す（テキスト窓は cg-active で隠れる）
       state.currentCg = null;                 // guard を外して必ず張り直す
-      showCg(snap.cgHoldLine.cg);
+      showCg(snap.cgHoldLine.cg, gen);
     } else {
-      showCg("");                             // CGを消してテキスト窓を戻す
+      showCg("", gen);                        // CGを消してテキスト窓を戻す
       dom.speaker.textContent = snap.speaker;
       dom.text.textContent = snap.text;
       if (snap.kind === "choice") showChoices(snap.line);
@@ -454,6 +503,7 @@
 
   function goBack() {
     if (state.cardActive) return;                          // 転換カード中は無視
+    if (!dom.episodeMenu.classList.contains("hidden")) return; // 話選択中は無視
     if (!dom.title.classList.contains("hidden")) return;   // 本編中のみ
     if (state.history.length < 2) return;                  // これ以上戻れない
     state.history.pop();                                   // 現在のビートを捨て
@@ -506,6 +556,18 @@
     // ミュートボタンのバインド（ボタンが index.html に存在する場合）
     const muteBtn = el("mute-btn");
     if (muteBtn) muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); };
+
+    // 話選択メニュー（#7）：タイトルの「話を選ぶ」・HUDの「☰ 話」から開く。
+    const titleEpBtn = el("title-episodes-btn");
+    if (titleEpBtn) titleEpBtn.onclick = (e) => { e.stopPropagation(); openEpisodeMenu(); };
+    const hudEpBtn = el("hud-episodes-btn");
+    if (hudEpBtn) hudEpBtn.onclick = (e) => { e.stopPropagation(); openEpisodeMenu(); };
+    const epCloseBtn = el("episode-close-btn");
+    if (epCloseBtn) epCloseBtn.onclick = (e) => { e.stopPropagation(); closeEpisodeMenu(); };
+    // メニュー背景クリックでも閉じる（パネル内クリックは stopPropagation で素通り防止）
+    dom.episodeMenu.onclick = (e) => { if (e.target === dom.episodeMenu) closeEpisodeMenu(); };
+    const epPanel = el("episode-panel");
+    if (epPanel) epPanel.onclick = (e) => e.stopPropagation();
   }
 
   boot();

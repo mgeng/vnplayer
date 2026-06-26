@@ -35,6 +35,18 @@ html, body {
   transition: opacity 0.4s ease;
 }
 
+/* 背景の減光オーバーレイ（実験中・戻すときはこの #bg::after ブロックごと削除）。
+   全体を少し暗く＋四隅を落とすビネットで、背景の悪目立ちを抑え立ち絵/本文を引き立てる。
+   濃さ調整：1つめ rgba の最後の数値（全体の暗さ）と 2つめ rgba（四隅）を上下する。 */
+#bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none;
+}
+
 /* 立ち絵 */
 #sprites {
   position: absolute; inset: 0;
@@ -82,6 +94,17 @@ html, body {
    CG が不透明になれば自然に覆われる＝ハードカットでなくディゾルブになる。
    よって立ち絵は display:none にせず残す。 */
 #stage.cg-active #face-window { display: none !important; }
+
+/* 全画面CG表示中は「画だけ」を見せる＝テキスト窓を隠す。
+   engine.js は cg-active を“画だけビート”の間だけ立てる（クリックでCGを消してから
+   その行の本文を通常表示する＝画→クリック→本文）。よって cg-active＝本文を出さない、で正しい。
+   立ち絵・顔窓も CG(z-index:2)に覆われ/別途隠れるので、画面には1枚絵だけが残る。 */
+#stage.cg-active #textbox { display: none !important; }
+
+/* 「画だけ」ホールド中はCG自身をクリック可能にする＝画クリックで送れる（engine の cg.onclick／#8 の意図を有効化）。
+   通常時は pointer-events:none のままにして、クリック送りを背後のテキスト窓へ通す。
+   これが無いと画だけ表示中はテキスト窓も非表示・CGもクリック不可で、マウスで送れず固まって見える。 */
+#stage.cg-active #cg { pointer-events: auto; }
 
 /* テキストウィンドウ：横書き左→右 */
 #textbox {
@@ -193,7 +216,10 @@ button:hover { filter: brightness(1.1); }
   border: 1px solid rgba(216,70,107,0.6);
 }
 
-/* 顔ウィンドウ（左下・本編中のみ） */
+/* 顔ウィンドウ（左下・本編中のみ）
+   bug#1: 中心の立ち絵と役割が重複し不要との判断でいったん非表示。
+   復活させたい場合はこの display:none を外す（engine.js 側のロジックは残してある）。 */
+#face-window { display: none !important; }
 #face-window {
   position: absolute;
   left: 16px;
